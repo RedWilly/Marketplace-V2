@@ -1,4 +1,3 @@
-//multimarketplace
 import { BigInt, store, Bytes } from "@graphprotocol/graph-ts";
 import {
   NFTKEYMarketplaceV2,
@@ -40,11 +39,7 @@ export function handleTokenDelisted(event: TokenDelisted): void {
     event.params.erc721Address.toHexString() +
     "-" +
     event.params.tokenId.toString();
-  let listing = Listing.load(id);
-  if (listing) {
-    listing.status = "Inactive";
-    listing.save();
-  }
+  store.remove("Listing", id);
 }
 
 export function handleTokenBought(event: TokenBought): void {
@@ -59,6 +54,7 @@ export function handleTokenBought(event: TokenBought): void {
   sale.royaltyFee = event.params.royaltyFee;
   sale.timestamp = event.block.timestamp;
   sale.status = "Sold";
+  sale.txid = event.transaction.hash.toHex(); // Store the transaction hash as txid
   sale.save();
 
   let listingId =
@@ -66,11 +62,7 @@ export function handleTokenBought(event: TokenBought): void {
     "-" +
     event.params.tokenId.toString();
 
-  let listing = Listing.load(listingId);
-  if (listing) {
-    listing.status = "Sold";
-    listing.save();
-  }
+  store.remove("Listing", listingId);
 
   // Update total volume traded for the collection
   let statsId = event.params.erc721Address.toHexString();
@@ -93,7 +85,9 @@ export function handleTokenBidEntered(event: TokenBidEntered): void {
   let id =
     event.params.erc721Address.toHexString() +
     "-" +
-    event.params.tokenId.toString();
+    event.params.tokenId.toString() +
+    "-" +
+    event.params.bid.bidder.toHexString();
   let bid = Bid.load(id);
   if (bid == null) {
     bid = new Bid(id);
@@ -113,13 +107,11 @@ export function handleTokenBidWithdrawn(event: TokenBidWithdrawn): void {
   let id =
     event.params.erc721Address.toHexString() +
     "-" +
-    event.params.tokenId.toString();
-  let bid = Bid.load(id);
-  if (bid != null) {
-    // Assuming you want to update the bid status when it's withdrawn
-    bid.status = "Withdrawn";
-    bid.save();
-  }
+    event.params.tokenId.toString() +
+    "-" +
+    event.params.bid.bidder.toHexString();
+
+  store.remove("Bid", id);
 }
 
 export function handleTokenBidAccepted(event: TokenBidAccepted): void {
@@ -134,27 +126,28 @@ export function handleTokenBidAccepted(event: TokenBidAccepted): void {
   sale.serviceFee = event.params.serviceFee;
   sale.royaltyFee = event.params.royaltyFee;
   sale.timestamp = event.block.timestamp;
+  sale.txid = event.transaction.hash.toHex(); // Store the transaction hash as txid
   sale.save();
 
-  // Update the Listing status to Sold
+  // Correctly identify the listing to be removed using only erc721Address and tokenId
   let listingId =
     event.params.erc721Address.toHexString() +
     "-" +
     event.params.tokenId.toString();
-  let listing = Listing.load(listingId);
-  if (listing) {
-    listing.status = "Sold";
-    listing.save();
-  }
 
-  // Update the Bid status to Accepted
+  //  this ID matches the one used when the listing was created
+  store.remove("Listing", listingId);
+
+  // Update the Bid status to Sold using the bid's unique ID
   let bidId =
-    event.params.bid.bidder.toHexString() +
+    event.params.erc721Address.toHexString() +
     "-" +
-    event.params.tokenId.toString();
+    event.params.tokenId.toString() +
+    "-" +
+    event.params.bid.bidder.toHexString();
   let bid = Bid.load(bidId);
   if (bid) {
-    bid.status = "Accepted";
+    bid.status = "Sold";
     bid.save();
   }
 
