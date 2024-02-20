@@ -54,4 +54,4 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleERC721Transfer
-      file: ./src/mapping.ts
+      file: ./src/market.ts
