@@ -16,10 +16,11 @@ type Sale @entity {
   buyer: Bytes!
   seller: Bytes!
   price: BigInt!
-  serviceFee: BigInt!
-  royaltyFee: BigInt!
+  serviceFee: BigInt
+  royaltyFee: BigInt
   timestamp: BigInt!
   status: String!
+  txid: String! # New field to store the transaction ID
 }
 
 type Bid @entity {
@@ -35,6 +36,5 @@ type Bid @entity {
 type CollectionStat @entity {
   id: ID!
   floorPrice: BigInt!
-  lastSalePrice: BigInt!
   totalVolumeTraded: BigInt!
 }
