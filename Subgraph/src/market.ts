@@ -135,7 +135,7 @@ export function handleTokenBidAccepted(event: TokenBidAccepted): void {
     "-" +
     event.params.tokenId.toString();
 
-  //  this ID matches the one used when the listing was created
+  // Now, this ID matches the one used when the listing was created
   store.remove("Listing", listingId);
 
   // Update the Bid status to Sold using the bid's unique ID
@@ -170,12 +170,9 @@ export function handleTokenBidAccepted(event: TokenBidAccepted): void {
 
 export function handleERC721Transfer(event: Transfer): void {
   let id = event.address.toHexString() + "-" + event.params.tokenId.toString();
-
-  // Load the listing from the subgraph store
   let listing = Listing.load(id);
   if (listing && listing.status == "Active") {
-    listing.status = "Transferred";
-    listing.save();
+    store.remove("Listing", id);
   }
 }
 
